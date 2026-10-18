@@ -25,6 +25,10 @@ data class Library(
     val onboardingDone: Boolean = false,
     /** "virtual" or a physical device id. */
     val midiTarget: String = "virtual",
+    /** "usb" or "wifi" — WiFi goes to MidiBridge.exe on the PC over UDP. */
+    val transportMode: String = "usb",
+    val wifiHost: String = "192.168.1.100",
+    val wifiPort: Int = 52365,
 ) {
     fun presetsIn(bankId: String): List<Preset> =
         presets.filter { it.bankId == bankId }

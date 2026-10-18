@@ -90,6 +90,9 @@ class PresetRepository(private val context: Context) {
         val root = JSONObject()
         root.put("onboardingDone", lib.onboardingDone)
         root.put("midiTarget", lib.midiTarget)
+        root.put("transportMode", lib.transportMode)
+        root.put("wifiHost", lib.wifiHost)
+        root.put("wifiPort", lib.wifiPort)
         root.put("banks", JSONArray().apply {
             lib.banks.forEach { b ->
                 put(JSONObject().apply {
@@ -116,6 +119,9 @@ class PresetRepository(private val context: Context) {
             Library(
                 onboardingDone = root.optBoolean("onboardingDone", false),
                 midiTarget = root.optString("midiTarget", "virtual"),
+                transportMode = root.optString("transportMode", "usb"),
+                wifiHost = root.optString("wifiHost", "192.168.1.100"),
+                wifiPort = root.optInt("wifiPort", 52365),
                 banks = root.optJSONArray("banks")?.let { arr ->
                     List(arr.length()) { i ->
                         arr.getJSONObject(i).let { o ->

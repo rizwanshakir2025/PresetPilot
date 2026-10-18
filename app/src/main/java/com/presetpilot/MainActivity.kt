@@ -48,6 +48,18 @@ class MainActivity : ComponentActivity() {
                         appState.midi.selectTarget(library.midiTarget)
                     }
 
+                    LaunchedEffect(
+                        library.transportMode,
+                        library.wifiHost,
+                        library.wifiPort,
+                    ) {
+                        appState.midi.selectTransport(
+                            library.transportMode,
+                            library.wifiHost,
+                            library.wifiPort,
+                        )
+                    }
+
                     AppNav(
                         appState = appState,
                         library = library,

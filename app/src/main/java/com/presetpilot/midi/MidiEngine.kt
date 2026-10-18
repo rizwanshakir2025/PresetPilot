@@ -24,6 +24,8 @@ class MidiEngine(private val appContext: Context) {
     companion object {
         private const val TAG = "MidiEngine"
         const val VIRTUAL_TARGET_ID = "virtual"
+        const val TRANSPORT_USB = "usb"
+        const val TRANSPORT_WIFI = "wifi"
     }
 
     data class Target(val id: String, val label: String, val isVirtual: Boolean)
@@ -37,6 +39,12 @@ class MidiEngine(private val appContext: Context) {
     private var physicalDevice: MidiDevice? = null
 
     var targetId: String = VIRTUAL_TARGET_ID
+
+    var transportMode: String = TRANSPORT_USB
+        private set
+
+    private val net = NetworkMidiTransport()
+    val wifiConnected: StateFlow<Boolean> = net.connected
 
     private val _virtualReady = MutableStateFlow(false)
     val virtualReady: StateFlow<Boolean> = _virtualReady.asStateFlow()
@@ -89,6 +97,13 @@ class MidiEngine(private val appContext: Context) {
         }, mainHandler)
     }
 
+    /** USB vs WiFi output. WiFi goes to MidiBridge.exe on the PC over UDP. */
+    fun selectTransport(mode: String, host: String, port: Int) {
+        transportMode = if (mode == TRANSPORT_WIFI) TRANSPORT_WIFI else TRANSPORT_USB
+        if (transportMode == TRANSPORT_WIFI) net.configure(host, port)
+        else net.disconnect()
+    }
+
     /** The core primitive: switch a VST to a preset. */
     fun sendPreset(program: Int, channel: Int, msb: Int, lsb: Int) {
         // Bank Select MSB/LSB first, then Program Change — the universal order.
@@ -118,15 +133,21 @@ class MidiEngine(private val appContext: Context) {
 
     private fun send(bytes: ByteArray) {
         try {
-            val port = if (targetId == VIRTUAL_TARGET_ID) selfWritePort else physicalPort
-            port?.send(bytes, 0, bytes.size)
-            MidiMonitor.log(bytes)
+            if (transportMode == TRANSPORT_WIFI) {
+                // Logged with a [wifi] tag by the sender thread on actual send.
+                net.send(bytes)
+            } else {
+                val port = if (targetId == VIRTUAL_TARGET_ID) selfWritePort else physicalPort
+                port?.send(bytes, 0, bytes.size)
+                MidiMonitor.log(bytes)
+            }
         } catch (e: Exception) {
             Log.w(TAG, "send failed: ${e.message}")
         }
     }
 
     fun shutdown() {
+        net.disconnect()
         try { selfWritePort?.close() } catch (_: Exception) {}
         try { physicalPort?.close() } catch (_: Exception) {}
         try { physicalDevice?.close() } catch (_: Exception) {}

@@ -35,7 +35,7 @@ import com.presetpilot.midi.MidiEngine
 @Composable
 fun OnboardingScreen(midi: MidiEngine, onDone: () -> Unit) {
     var page by remember { mutableStateOf(0) }
-    val titles = listOf("Connect USB MIDI", "Set up your DAW", "How it works", "Plugin setup")
+    val titles = listOf("Connect USB MIDI", "Set up your DAW", "How it works", "Plugin setup", "WiFi option")
     Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
         Text(
             "PresetPilot", fontSize = 30.sp, fontWeight = FontWeight.Bold,
@@ -51,6 +51,7 @@ fun OnboardingScreen(midi: MidiEngine, onDone: () -> Unit) {
                 1 -> DawPage()
                 2 -> HowPage()
                 3 -> PluginPage()
+                4 -> WifiPage()
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -61,8 +62,8 @@ fun OnboardingScreen(midi: MidiEngine, onDone: () -> Unit) {
         ) {
             if (page > 0) TextButton(onClick = { page-- }) { Text("Back") }
             else TextButton(onClick = onDone) { Text("Skip") }
-            Text("${page + 1} / 4", color = Color.Gray)
-            if (page < 3) Button(onClick = { page++ }) { Text("Next") }
+            Text("${page + 1} / 5", color = Color.Gray)
+            if (page < 4) Button(onClick = { page++ }) { Text("Next") }
             else Button(onClick = onDone) { Text("Done") }
         }
     }
@@ -207,4 +208,28 @@ private fun PluginPage() {
             ).forEachIndexed { i, s -> NumberedStep(i + 1, s) }
         }
     }
+}
+
+@Composable
+private fun WifiPage() {
+    Text(
+        "No cable? Send presets over WiFi instead — the same CC0 / CC32 / " +
+            "Program Change messages, carried by UDP to MidiBridge on your PC.",
+        fontSize = 14.sp, lineHeight = 22.sp, color = Color.Gray,
+    )
+    Spacer(Modifier.height(8.dp))
+    listOf(
+        "Put the phone and the PC on the same WiFi network.",
+        "On the PC: install loopMIDI and create a virtual port (e.g. \"PresetPilot WiFi\").",
+        "On the PC: run MidiBridge.exe and open the loopMIDI port as its MIDI output.",
+        "In this app: Settings → MIDI Output → WiFi (MIDI Bridge), and enter the PC's IP address (port stays 52365).",
+        "Windows Firewall: allow MidiBridge.exe, or open UDP port 52365.",
+        "Tap a preset — the MIDI monitor logs each message with a [wifi] tag.",
+    ).forEachIndexed { i, s -> NumberedStep(i + 1, s) }
+    Spacer(Modifier.height(8.dp))
+    Text(
+        "The bridge is the same MidiBridge.exe from the MouthMIDI project — " +
+            "no new PC software needed if you already run it.",
+        fontSize = 12.sp, color = Color.Gray, lineHeight = 18.sp,
+    )
 }

@@ -14,8 +14,9 @@ object MidiMonitor {
     private val _lines = MutableStateFlow<List<String>>(emptyList())
     val lines: StateFlow<List<String>> = _lines.asStateFlow()
 
-    fun log(bytes: ByteArray) {
-        val line = "${timeFormat.format(Date())}  ${describe(bytes)}"
+    fun log(bytes: ByteArray, transport: String = "usb") {
+        val tag = if (transport == "wifi") "[wifi] " else ""
+        val line = "${timeFormat.format(Date())}  $tag${describe(bytes)}"
         _lines.value = (_lines.value + line).takeLast(40)
     }
 

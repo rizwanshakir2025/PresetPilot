@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -37,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.presetpilot.AppState
@@ -69,43 +71,133 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
         )
 
         SectionTitle("MIDI Output")
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-            ),
+        val wifiConnected by midi.wifiConnected.collectAsState()
+        val isWifi = library.transportMode == "wifi"
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable {
+                scope.launch { appState.repo.update { it.copy(transportMode = "usb") } }
+            }.padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                if (virtualReady) "● PresetPilot virtual device live — PC sees it over USB"
-                else "○ Virtual device starting…",
-                modifier = Modifier.padding(12.dp), fontSize = 14.sp,
-                color = if (virtualReady) Color(0xFF7CFC9A) else Color.Gray,
+            RadioButton(
+                selected = !isWifi,
+                onClick = {
+                    scope.launch { appState.repo.update { it.copy(transportMode = "usb") } }
+                },
             )
+            Text("USB MIDI", fontSize = 15.sp)
         }
-        Spacer(Modifier.height(8.dp))
-        targets.forEach { t ->
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .clickable {
-                        scope.launch {
-                            appState.repo.update { it.copy(midiTarget = t.id) }
-                        }
-                    }.padding(vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
+        Row(
+            modifier = Modifier.fillMaxWidth().clickable {
+                scope.launch { appState.repo.update { it.copy(transportMode = "wifi") } }
+            }.padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RadioButton(
+                selected = isWifi,
+                onClick = {
+                    scope.launch { appState.repo.update { it.copy(transportMode = "wifi") } }
+                },
+            )
+            Text("WiFi (MIDI Bridge)", fontSize = 15.sp)
+        }
+        Spacer(Modifier.height(4.dp))
+        if (!isWifi) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
             ) {
-                RadioButton(
-                    selected = library.midiTarget == t.id,
-                    onClick = {
-                        scope.launch {
-                            appState.repo.update { it.copy(midiTarget = t.id) }
-                        }
-                    },
+                Text(
+                    if (virtualReady) "● PresetPilot virtual device live — PC sees it over USB"
+                    else "○ Virtual device starting…",
+                    modifier = Modifier.padding(12.dp), fontSize = 14.sp,
+                    color = if (virtualReady) Color(0xFF7CFC9A) else Color.Gray,
                 )
-                Text(t.label, fontSize = 15.sp)
             }
-        }
-        OutlinedButton(onClick = { targets = midi.listTargets() }) {
-            Text("Refresh devices")
+            Spacer(Modifier.height(8.dp))
+            targets.forEach { t ->
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .clickable {
+                            scope.launch {
+                                appState.repo.update { it.copy(midiTarget = t.id) }
+                            }
+                        }.padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(
+                        selected = library.midiTarget == t.id,
+                        onClick = {
+                            scope.launch {
+                                appState.repo.update { it.copy(midiTarget = t.id) }
+                            }
+                        },
+                    )
+                    Text(t.label, fontSize = 15.sp)
+                }
+            }
+            OutlinedButton(onClick = { targets = midi.listTargets() }) {
+                Text("Refresh devices")
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Text(
+                    if (wifiConnected) "● WiFi live → ${library.wifiHost}:${library.wifiPort}"
+                    else "○ Not connected — check the PC IP and that MidiBridge is running",
+                    modifier = Modifier.padding(12.dp), fontSize = 14.sp,
+                    color = if (wifiConnected) Color(0xFF7CFC9A) else Color.Gray,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            var host by remember(library.wifiHost) { mutableStateOf(library.wifiHost) }
+            var portText by remember(library.wifiPort) {
+                mutableStateOf(library.wifiPort.toString())
+            }
+            OutlinedTextField(
+                value = host,
+                onValueChange = { v ->
+                    host = v
+                    scope.launch {
+                        appState.repo.update { it.copy(wifiHost = v) }
+                    }
+                },
+                label = { Text("PC IP address") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            OutlinedTextField(
+                value = portText,
+                onValueChange = { v ->
+                    val digits = v.filter { it.isDigit() }.take(5)
+                    portText = digits
+                    digits.toIntOrNull()?.let { p ->
+                        scope.launch {
+                            appState.repo.update {
+                                it.copy(wifiPort = p.coerceIn(1, 65535))
+                            }
+                        }
+                    }
+                },
+                label = { Text("Bridge port") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Phone and PC must be on the same WiFi. On the PC: run MidiBridge.exe " +
+                    "with your loopMIDI port open, and allow UDP ${library.wifiPort} " +
+                    "through Windows Firewall.",
+                fontSize = 12.sp, color = Color.Gray, lineHeight = 18.sp,
+            )
         }
         TextButton(onClick = { showMonitor = !showMonitor }) {
             Text(if (showMonitor) "Hide MIDI monitor" else "Show MIDI monitor")
@@ -161,7 +253,7 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
 
         SectionTitle("About")
         Text(
-            "PresetPilot 1.0.0 — switch VST presets from your phone over USB MIDI.",
+            "PresetPilot 1.1.0 — switch VST presets from your phone over USB MIDI or WiFi.",
             fontSize = 14.sp, color = Color.Gray,
         )
         TextButton(onClick = {
