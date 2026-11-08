@@ -233,7 +233,7 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
                     Text(bank.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Text(
                         if (bank.msgType == "cc")
-                            "$count presets · ch ${bank.channel + 1} · CC ${bank.presetCc} presets"
+                            "$count presets · ch ${bank.channel + 1} · CC base ${bank.presetCcBase}"
                         else
                             "$count presets · ch ${bank.channel + 1} · bank ${bank.msb}/${bank.lsb}",
                         fontSize = 12.sp, color = Color.Gray,
@@ -256,7 +256,7 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
 
         SectionTitle("About")
         Text(
-            "PresetPilot 1.2.0 — switch VST presets from your phone over USB MIDI or WiFi, " +
+            "PresetPilot 1.2.1 — switch VST presets from your phone over USB MIDI or WiFi, " +
                 "by Program Change or CC Preset.",
             fontSize = 14.sp, color = Color.Gray,
         )
@@ -306,7 +306,7 @@ private fun BankEditDialog(
     var msb by remember { mutableStateOf(initial.msb) }
     var lsb by remember { mutableStateOf(initial.lsb) }
     var msgType by remember { mutableStateOf(initial.msgType) }
-    var presetCc by remember { mutableStateOf(initial.presetCc) }
+    var presetCcBase by remember { mutableStateOf(initial.presetCcBase) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -339,17 +339,19 @@ private fun BankEditDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(selected = msgType == "cc", onClick = { msgType = "cc" })
-                    Text("CC Preset (one CC, value = program)", fontSize = 14.sp)
+                    Text("CC Preset (own CC per preset)", fontSize = 14.sp)
                 }
                 if (msgType == "cc") {
                     StepperRow(
-                        label = "Preset CC number", value = presetCc, range = 0..127,
-                        onChange = { presetCc = it },
+                        label = "Preset CC base", value = presetCcBase, range = 0..127,
+                        onChange = { presetCcBase = it },
                     )
                     Text(
-                        "Map each preset in the plugin as 'CC Preset' with this CC " +
-                            "number and value = program number. Use this when the " +
-                            "DAW doesn't forward Program Change to the plugin.",
+                        "Each preset sends its own CC number: base + program " +
+                            "(base 20 → programs 0–3 send CC 20–23). Map each preset " +
+                            "in the plugin as 'CC Preset' with its own CC number. " +
+                            "Use this when the DAW doesn't forward Program Change " +
+                            "to the plugin.",
                         fontSize = 12.sp, color = Color.Gray,
                     )
                 } else {
@@ -371,7 +373,7 @@ private fun BankEditDialog(
         },
         confirmButton = {
             TextButton(onClick = {
-                onSave(initial.copy(name = name.ifBlank { "Bank" }, channel = channel, msb = msb, lsb = lsb, msgType = msgType, presetCc = presetCc))
+                onSave(initial.copy(name = name.ifBlank { "Bank" }, channel = channel, msb = msb, lsb = lsb, msgType = msgType, presetCcBase = presetCcBase))
             }) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },

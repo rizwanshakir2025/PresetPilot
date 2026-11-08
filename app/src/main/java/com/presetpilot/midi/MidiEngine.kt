@@ -113,12 +113,14 @@ class MidiEngine(private val appContext: Context) {
     }
 
     /**
-     * CC Preset mode: one CC whose value is the preset program. Used when a
-     * host (e.g. Cubase) doesn't forward Program Change to the plugin but
-     * does forward CCs — Neural DSP's "CC Preset" mapping matches on this.
+     * CC Preset mode: each preset sends its own CC number, base + program,
+     * with value 127 (trigger). Neural DSP's "CC Preset" matches on CC
+     * number only — no value — so one shared CC number would route every
+     * preset to the same mapping. Used when a host (e.g. Cubase) doesn't
+     * forward Program Change to the plugin but does forward CCs.
      */
-    fun sendPresetCc(program: Int, channel: Int, cc: Int) {
-        controlChange(cc, program, channel)
+    fun sendPresetCc(program: Int, channel: Int, ccBase: Int) {
+        controlChange((ccBase + program).coerceIn(0, 127), 127, channel)
     }
 
     fun programChange(program: Int, channel: Int) {

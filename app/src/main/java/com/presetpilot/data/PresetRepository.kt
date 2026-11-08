@@ -98,7 +98,7 @@ class PresetRepository(private val context: Context) {
                 put(JSONObject().apply {
                     put("id", b.id); put("name", b.name)
                     put("channel", b.channel); put("msb", b.msb); put("lsb", b.lsb)
-                    put("msgType", b.msgType); put("presetCc", b.presetCc)
+                    put("msgType", b.msgType); put("presetCcBase", b.presetCcBase)
                 })
             }
         })
@@ -131,7 +131,11 @@ class PresetRepository(private val context: Context) {
                                 channel = o.optInt("channel", 0),
                                 msb = o.optInt("msb", 0), lsb = o.optInt("lsb", 0),
                                 msgType = o.optString("msgType", "pc"),
-                                presetCc = o.optInt("presetCc", 20),
+                                presetCcBase = o.optInt(
+                                    "presetCcBase",
+                                    // v1.2 saved the single CC number as "presetCc".
+                                    o.optInt("presetCc", 20),
+                                ),
                             )
                         }
                     }

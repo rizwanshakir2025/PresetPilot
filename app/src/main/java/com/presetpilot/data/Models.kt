@@ -8,10 +8,14 @@ data class Bank(
     val channel: Int = 0,   // 0-based
     val msb: Int = 0,       // Bank Select MSB (CC0)
     val lsb: Int = 0,       // Bank Select LSB (CC32)
-    /** "pc" = CC0/CC32/Program Change; "cc" = single CC Preset message. */
+    /** "pc" = CC0/CC32/Program Change; "cc" = one CC per preset. */
     val msgType: String = "pc",
-    /** CC number used when msgType == "cc"; value sent is the preset program. */
-    val presetCc: Int = 20,
+    /**
+     * CC Preset base (msgType == "cc"): each preset sends its own CC number,
+     * base + program (e.g. base 20 → programs 0–3 send CC 20–23), because
+     * Neural DSP's "CC Preset" matches on CC number only — no value.
+     */
+    val presetCcBase: Int = 20,
 )
 
 data class Preset(

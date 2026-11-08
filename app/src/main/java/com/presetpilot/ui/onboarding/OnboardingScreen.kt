@@ -177,7 +177,7 @@ private fun PluginPage() {
                 "Pick the preset, set the PC number (channel 1 = the default), save.",
                 "Repeat for each preset. The little MIDI icon appears next to mapped presets.",
                 "Shortcut: right-click any preset → 'Enable MIDI Learn' → tap the PresetPilot button for it.",
-                "If presets still don't switch, your DAW may not forward Program Change to the plugin — switch the bank to 'CC Preset' in Settings (one CC, value = program) and map each preset as 'CC Preset' in the plugin instead.",
+                "If presets still don't switch, your DAW may not forward Program Change to the plugin — switch the bank to 'CC Preset' in Settings (each preset sends its own CC: base + program) and map each preset as 'CC Preset' with its own CC number in the plugin.",
             ).forEachIndexed { i, s -> NumberedStep(i + 1, s) }
         }
         "Serum 2" -> {

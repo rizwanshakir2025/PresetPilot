@@ -80,7 +80,7 @@ fun HomeScreen(appState: AppState, library: Library, padding: PaddingValues) {
 
     fun fire(preset: Preset) {
         val b = library.banks.firstOrNull { it.id == preset.bankId } ?: return
-        if (b.msgType == "cc") midi.sendPresetCc(preset.program, b.channel, b.presetCc)
+        if (b.msgType == "cc") midi.sendPresetCc(preset.program, b.channel, b.presetCcBase)
         else midi.sendPreset(preset.program, b.channel, b.msb, b.lsb)
         flashedId = preset.id
         scope.launch {
