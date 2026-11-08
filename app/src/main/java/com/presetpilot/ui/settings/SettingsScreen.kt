@@ -117,25 +117,34 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
                 )
             }
             Spacer(Modifier.height(8.dp))
-            targets.forEach { t ->
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                        .clickable {
-                            scope.launch {
-                                appState.repo.update { it.copy(midiTarget = t.id) }
-                            }
-                        }.padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(
-                        selected = library.midiTarget == t.id,
-                        onClick = {
-                            scope.launch {
-                                appState.repo.update { it.copy(midiTarget = t.id) }
-                            }
-                        },
-                    )
-                    Text(t.label, fontSize = 15.sp)
+            // The output chooser only appears when there is actually a choice:
+            // with no other MIDI device connected, this phone is the only USB
+            // output, and listing it as a selectable option is redundant.
+            if (targets.size > 1) {
+                Text(
+                    "Output device", fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(vertical = 4.dp),
+                )
+                targets.forEach { t ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .clickable {
+                                scope.launch {
+                                    appState.repo.update { it.copy(midiTarget = t.id) }
+                                }
+                            }.padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = library.midiTarget == t.id,
+                            onClick = {
+                                scope.launch {
+                                    appState.repo.update { it.copy(midiTarget = t.id) }
+                                }
+                            },
+                        )
+                        Text(t.label, fontSize = 15.sp)
+                    }
                 }
             }
             OutlinedButton(onClick = { targets = midi.listTargets() }) {
@@ -256,7 +265,7 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
 
         SectionTitle("About")
         Text(
-            "PresetPilot 1.2.2 — switch VST presets from your phone over USB MIDI or WiFi, " +
+            "PresetPilot 1.2.3 — switch VST presets from your phone over USB MIDI or WiFi, " +
                 "by Program Change or CC Preset.",
             fontSize = 14.sp, color = Color.Gray,
         )

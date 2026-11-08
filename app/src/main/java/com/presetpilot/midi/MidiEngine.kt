@@ -51,7 +51,7 @@ class MidiEngine(private val appContext: Context) {
 
     fun listTargets(): List<Target> {
         val out = mutableListOf(
-            Target(VIRTUAL_TARGET_ID, "Phone USB — PresetPilot (recommended)", true),
+            Target(VIRTUAL_TARGET_ID, "This phone — PresetPilot (USB MIDI)", true),
         )
         midiManager.devices
             .filter { info ->
