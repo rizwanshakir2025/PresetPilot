@@ -22,7 +22,7 @@ android {
     // conventional Android debug credentials (android/androiddebugkey);
     // it is debug-only — release signing stays separate and private.
     signingConfigs {
-        create("debug") {
+        getByName("debug") {
             storeFile = file("../keystore/debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
