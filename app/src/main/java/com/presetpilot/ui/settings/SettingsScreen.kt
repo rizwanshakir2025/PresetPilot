@@ -256,7 +256,7 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
 
         SectionTitle("About")
         Text(
-            "PresetPilot 1.2.1 — switch VST presets from your phone over USB MIDI or WiFi, " +
+            "PresetPilot 1.2.2 — switch VST presets from your phone over USB MIDI or WiFi, " +
                 "by Program Change or CC Preset.",
             fontSize = 14.sp, color = Color.Gray,
         )

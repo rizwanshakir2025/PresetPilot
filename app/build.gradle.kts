@@ -12,11 +12,28 @@ android {
         applicationId = "com.presetpilot"
         minSdk = 26
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.2.1"
+        versionCode = 5
+        versionName = "1.2.2"
+    }
+
+    // Stable debug signing: every CI build must share ONE signature, or
+    // Android refuses to install an update over the previous build (it
+    // surfaces as a parse error). The committed debug.keystore uses the
+    // conventional Android debug credentials (android/androiddebugkey);
+    // it is debug-only — release signing stays separate and private.
+    signingConfigs {
+        create("debug") {
+            storeFile = file("../keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
