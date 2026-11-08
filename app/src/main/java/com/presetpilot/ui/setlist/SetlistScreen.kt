@@ -57,7 +57,8 @@ fun SetlistScreen(appState: AppState, library: Library, padding: PaddingValues) 
 
     fun fire(preset: Preset, index: Int) {
         val bank = library.banks.firstOrNull { it.id == preset.bankId } ?: return
-        midi.sendPreset(preset.program, bank.channel, bank.msb, bank.lsb)
+        if (bank.msgType == "cc") midi.sendPresetCc(preset.program, bank.channel, bank.presetCc)
+        else midi.sendPreset(preset.program, bank.channel, bank.msb, bank.lsb)
         currentIndex = index
     }
 

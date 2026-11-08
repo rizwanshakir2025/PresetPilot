@@ -8,6 +8,10 @@ data class Bank(
     val channel: Int = 0,   // 0-based
     val msb: Int = 0,       // Bank Select MSB (CC0)
     val lsb: Int = 0,       // Bank Select LSB (CC32)
+    /** "pc" = CC0/CC32/Program Change; "cc" = single CC Preset message. */
+    val msgType: String = "pc",
+    /** CC number used when msgType == "cc"; value sent is the preset program. */
+    val presetCc: Int = 20,
 )
 
 data class Preset(

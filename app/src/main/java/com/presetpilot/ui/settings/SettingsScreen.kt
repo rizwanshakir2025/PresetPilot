@@ -232,7 +232,10 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
                 Column(modifier = Modifier.weight(1f)) {
                     Text(bank.name, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                     Text(
-                        "$count presets · ch ${bank.channel + 1} · bank ${bank.msb}/${bank.lsb}",
+                        if (bank.msgType == "cc")
+                            "$count presets · ch ${bank.channel + 1} · CC ${bank.presetCc} presets"
+                        else
+                            "$count presets · ch ${bank.channel + 1} · bank ${bank.msb}/${bank.lsb}",
                         fontSize = 12.sp, color = Color.Gray,
                     )
                 }
@@ -253,7 +256,8 @@ fun SettingsScreen(appState: AppState, library: Library, padding: PaddingValues)
 
         SectionTitle("About")
         Text(
-            "PresetPilot 1.1.0 — switch VST presets from your phone over USB MIDI or WiFi.",
+            "PresetPilot 1.2.0 — switch VST presets from your phone over USB MIDI or WiFi, " +
+                "by Program Change or CC Preset.",
             fontSize = 14.sp, color = Color.Gray,
         )
         TextButton(onClick = {
@@ -301,6 +305,8 @@ private fun BankEditDialog(
     var channel by remember { mutableStateOf(initial.channel) }
     var msb by remember { mutableStateOf(initial.msb) }
     var lsb by remember { mutableStateOf(initial.lsb) }
+    var msgType by remember { mutableStateOf(initial.msgType) }
+    var presetCc by remember { mutableStateOf(initial.presetCc) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -317,24 +323,55 @@ private fun BankEditDialog(
                     label = "MIDI channel", value = channel + 1, range = 1..16,
                     onChange = { channel = it - 1 },
                 )
-                StepperRow(
-                    label = "Bank MSB (CC0)", value = msb, range = 0..127,
-                    onChange = { msb = it },
-                )
-                StepperRow(
-                    label = "Bank LSB (CC32)", value = lsb, range = 0..127,
-                    onChange = { lsb = it },
-                )
-                Text(
-                    "Most VSTs ignore bank select and just use the program number — " +
-                        "leave MSB/LSB at 0 unless yours needs them.",
-                    fontSize = 12.sp, color = Color.Gray,
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .clickable { msgType = "pc" }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = msgType != "cc", onClick = { msgType = "pc" })
+                    Text("Program Change (CC0/CC32/PC)", fontSize = 14.sp)
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .clickable { msgType = "cc" }
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    RadioButton(selected = msgType == "cc", onClick = { msgType = "cc" })
+                    Text("CC Preset (one CC, value = program)", fontSize = 14.sp)
+                }
+                if (msgType == "cc") {
+                    StepperRow(
+                        label = "Preset CC number", value = presetCc, range = 0..127,
+                        onChange = { presetCc = it },
+                    )
+                    Text(
+                        "Map each preset in the plugin as 'CC Preset' with this CC " +
+                            "number and value = program number. Use this when the " +
+                            "DAW doesn't forward Program Change to the plugin.",
+                        fontSize = 12.sp, color = Color.Gray,
+                    )
+                } else {
+                    StepperRow(
+                        label = "Bank MSB (CC0)", value = msb, range = 0..127,
+                        onChange = { msb = it },
+                    )
+                    StepperRow(
+                        label = "Bank LSB (CC32)", value = lsb, range = 0..127,
+                        onChange = { lsb = it },
+                    )
+                    Text(
+                        "Most VSTs ignore bank select and just use the program number — " +
+                            "leave MSB/LSB at 0 unless yours needs them.",
+                        fontSize = 12.sp, color = Color.Gray,
+                    )
+                }
             }
         },
         confirmButton = {
             TextButton(onClick = {
-                onSave(initial.copy(name = name.ifBlank { "Bank" }, channel = channel, msb = msb, lsb = lsb))
+                onSave(initial.copy(name = name.ifBlank { "Bank" }, channel = channel, msb = msb, lsb = lsb, msgType = msgType, presetCc = presetCc))
             }) { Text("Save") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },

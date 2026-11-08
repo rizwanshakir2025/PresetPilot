@@ -98,6 +98,7 @@ class PresetRepository(private val context: Context) {
                 put(JSONObject().apply {
                     put("id", b.id); put("name", b.name)
                     put("channel", b.channel); put("msb", b.msb); put("lsb", b.lsb)
+                    put("msgType", b.msgType); put("presetCc", b.presetCc)
                 })
             }
         })
@@ -129,6 +130,8 @@ class PresetRepository(private val context: Context) {
                                 id = o.getString("id"), name = o.getString("name"),
                                 channel = o.optInt("channel", 0),
                                 msb = o.optInt("msb", 0), lsb = o.optInt("lsb", 0),
+                                msgType = o.optString("msgType", "pc"),
+                                presetCc = o.optInt("presetCc", 20),
                             )
                         }
                     }

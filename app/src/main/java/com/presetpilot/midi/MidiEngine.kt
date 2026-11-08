@@ -112,6 +112,15 @@ class MidiEngine(private val appContext: Context) {
         programChange(program, channel)
     }
 
+    /**
+     * CC Preset mode: one CC whose value is the preset program. Used when a
+     * host (e.g. Cubase) doesn't forward Program Change to the plugin but
+     * does forward CCs — Neural DSP's "CC Preset" mapping matches on this.
+     */
+    fun sendPresetCc(program: Int, channel: Int, cc: Int) {
+        controlChange(cc, program, channel)
+    }
+
     fun programChange(program: Int, channel: Int) {
         send(byteArrayOf((0xC0 or (channel and 0x0F)).toByte(), program.toByte()))
     }
